@@ -20,7 +20,10 @@ if('serviceWorker' in navigator){
     swReloaded=true; window.location.reload();
   });
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(function(reg){
+    /* sw.js?v=<app-ver>: convencion de la suite, cada version es una peticion de red distinta */
+    var verEl=document.querySelector('.app-ver');
+    var swUrl='sw.js?v='+encodeURIComponent(verEl?verEl.textContent.trim():Date.now());
+    navigator.serviceWorker.register(swUrl, {updateViaCache:'none'}).then(function(reg){
       swReg=reg;
       reg.update();
       if(reg.waiting && navigator.serviceWorker.controller){ reg.waiting.postMessage({action:'skipWaiting'}); }
@@ -367,7 +370,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v11</div>
+    <div class="app-ver">v14</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
