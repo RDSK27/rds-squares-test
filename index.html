@@ -304,7 +304,7 @@ if('serviceWorker' in navigator){
 
     <div class="segment" id="segModo">
       <button class="sel" data-v="normal">Normal</button>
-      <button data-v="extremo" data-soon="1">Extremo</button>
+      <button data-v="extremo">Extremo</button>
       <button data-v="limite">L&#237;mite</button>
     </div>
 
@@ -447,7 +447,7 @@ if('serviceWorker' in navigator){
       <div class="rank-screen-title">Ranking completo</div>
       <div class="rank-tabs" id="segModoR">
         <button class="rank-tab" data-v="normal">Normal</button>
-        <button class="rank-tab" data-v="extremo" data-soon="1">Extremo</button>
+        <button class="rank-tab" data-v="extremo">Extremo</button>
         <button class="rank-tab" data-v="limite">L&#237;mite</button>
       </div>
       <div class="rank-tabs" id="segEstR" style="margin-top:8px;">
@@ -519,7 +519,7 @@ function seg(id){
 }
 function selVal(id){ var b=$(id).querySelector('button.sel'); return b?b.getAttribute('data-v'):null; }
 
-var S={mode:'normal',stim:'a',total:'25',totalN:25,queue:[],cur:-1,name:'RDS',sport:'',times:[],t0:0,running:false,raf:0,lock:true,countIv:0,coverTo:0,resEnsayos:0,pressed:0,cells:[],sq:[]};
+var S={mode:'normal',stim:'a',total:'25',totalN:25,queue:[],cur:-1,curs:[],name:'RDS',sport:'',times:[],t0:0,running:false,raf:0,lock:true,countIv:0,coverTo:0,resEnsayos:0,pressed:0,cells:[],sq:[]};
 
 /* ---------- Modo NORMAL (2026-10-08) ----------
    Rejilla de 5x5. Al empezar, 5 cuadrados (al azar) empiezan a ACORTARSE en altura y tardan SQ_START_MS en desaparecer. Se pulsan antes de que
@@ -585,7 +585,7 @@ function runGame(){
   sqBuildGrid();
   $('stTimeK').textContent='Tiempo'; $('stTime').textContent='0:00.00';
   $('stAvgK').textContent='Media react.'; $('stAvg').textContent='--';
-  $('trialCount').textContent=(S.mode==='normal') ? ('0/'+S.totalN) : '0'; setProgress(0);
+  $('trialCount').textContent=(S.mode==='normal'||S.mode==='extremo') ? ('0/'+S.totalN) : '0'; setProgress(0);
   var n=3, el=$('sqCount');
   function step(){
     if(n<=0){ el.textContent=''; beginPlay(); return; }
@@ -596,6 +596,7 @@ function runGame(){
 }
 function beginPlay(){
   if(S.mode==='normal'){ nrmBegin(); return; }
+  if(S.mode==='extremo'){ exBegin(); return; }
   S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
   sqStart(SQ_FIRST, -1);
   S.raf=requestAnimationFrame(sqLoop);
@@ -623,6 +624,7 @@ function sqLoop(){
 function onPick(cell){
   if(!S.running || S.lock) return;
   if(S.mode==='normal'){ nrmPick(cell); return; }
+  if(S.mode==='extremo'){ exPick(cell); return; }
   var i=parseInt(cell.getAttribute('data-i'),10), c=S.cells[i];
   if(!c || c.st==='dead') return;                      /* hueco vacio: no hace nada */
   if(c.st==='full'){ sndFail(); finish('wrong'); return; }   /* no se estaba acortando */
@@ -677,6 +679,54 @@ function nrmPick(cell){
   if(S.pressed>=S.totalN){ finishNormal(); return; }
   if(!S.queue.length){ nrmCycle(); }                    /* acabaron los 25: vuelven a aparecer todos */
   nrmNext();
+}
+/* ---------- Modo EXTREMO (2026-10-08) ----------
+   Igual que NORMAL, pero salen DOS cuadrados a la vez (los dos empiezan a acortarse en el mismo instante, SQE_MS = 1000 ms hasta llegar abajo).
+   Hay que pulsar los dos: si cualquiera de los dos llega abajo sin pulsarse, o se pulsa un cuadrado que no se esta acortando, el ejercicio se da
+   por FALLADO. No salen otros dos hasta haber pulsado AMBOS. Cada pulsacion cuenta como un acierto (25/50/100 = cuadrados pulsados, como en Normal);
+   la reaccion de cada cuadrado va desde que empezo a acortarse hasta que se pulsa. Los 25 cuadrados se reparten de dos en dos: el 25 es impar, asi que
+   al agotar cada vuelta de 25 queda una ronda de UN solo cuadrado (decision mia, no confirmada); en 50 y 100 las vueltas se renuevan como en Normal.
+   Se guarda en su propio ranking (mode='extremo'), ordenado por reaccion media. */
+var SQE_MS=1000;
+function exNext(){
+  var need=Math.min(2, S.totalN-S.pressed), k, i, c;
+  if(!S.queue.length){ nrmCycle(); }
+  S.curs=[];
+  for(k=0;k<need && S.queue.length;k++){
+    i=S.queue.shift(); c=S.cells[i];
+    c.st='shrink'; c.t0=performance.now(); c.dur=SQE_MS; S.sq[i].classList.add('shr'); S.curs.push(i);
+  }
+}
+function exBegin(){
+  S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
+  nrmCycle(); exNext();
+  S.raf=requestAnimationFrame(exLoop);
+}
+function exLoop(){
+  if(!S.running) return;
+  var now=performance.now(), k, i, c, f;
+  $('stTime').textContent=fmtTime(now-S.t0);
+  for(k=0;k<S.curs.length;k++){
+    i=S.curs[k]; c=S.cells[i];
+    f=1-(now-c.t0)/c.dur;
+    if(f<=0){ S.sq[i].firstChild.style.height='0%'; failNormal('Se te ha escapado un cuadrado. Vuelve a intentarlo.'); return; }
+    S.sq[i].firstChild.style.height=(f*100).toFixed(1)+'%';
+  }
+  S.raf=requestAnimationFrame(exLoop);
+}
+function exPick(cell){
+  var i=parseInt(cell.getAttribute('data-i'),10), c=S.cells[i], pos=S.curs.indexOf(i);
+  if(!c || c.st==='dead') return;                       /* hueco vacio: no hace nada */
+  if(pos<0){ failNormal('Has pulsado un cuadrado que no era de los que se acortaban. Vuelve a intentarlo.'); return; }
+  var rt=performance.now()-c.t0;
+  S.times.push(rt); S.pressed++;
+  sndSymbol();
+  c.st='dead'; S.sq[i].classList.remove('shr'); S.sq[i].classList.add('dead');
+  S.curs.splice(pos,1);
+  $('trialCount').textContent=S.pressed+'/'+S.totalN; setProgress(S.pressed/S.totalN);
+  updateStats();
+  if(S.pressed>=S.totalN){ finishNormal(); return; }
+  if(S.curs.length===0){ exNext(); }                    /* hasta pulsar los DOS no salen los siguientes */
 }
 function failNormal(msg){
   S.running=false; S.lock=true; cancelAnimationFrame(S.raf);
