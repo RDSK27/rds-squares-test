@@ -191,6 +191,7 @@ if('serviceWorker' in navigator){
   .sq.dead .sq-fill{display:none;}
   .sq-count{position:absolute;left:0;right:0;top:50%;margin-top:-70px;text-align:center;color:var(--rojo);font-weight:900;font-size:130px;line-height:1;-webkit-text-stroke:4px #fff;paint-order:stroke fill;pointer-events:none;z-index:5;}   /* rojo con borde blanco: se ve sobre blanco y sobre negro */
   .segment button[data-soon],.rank-tab[data-soon]{opacity:.38;cursor:default;}
+  .segment.off,.rank-tabs.off{opacity:.35;pointer-events:none;}   /* Limite: 25/50/100 no aplica */
   .cell.empty{background:#fff;}
   .grid.covered .cell svg{visibility:hidden;}
   .cell{border:2px solid var(--negro);display:flex;align-items:center;justify-content:center;background:#fff;}
@@ -304,7 +305,7 @@ if('serviceWorker' in navigator){
     <div class="segment" id="segModo">
       <button class="sel" data-v="normal">Normal</button>
       <button data-v="extremo" data-soon="1">Extremo</button>
-      <button data-v="limite" data-soon="1">L&#237;mite</button>
+      <button data-v="limite">L&#237;mite</button>
     </div>
 
     <div class="segment" id="segEstimulo">
@@ -313,9 +314,9 @@ if('serviceWorker' in navigator){
     </div>
 
     <div class="segment" id="segEnsayos">
-      <button class="sel" data-v="a">?</button>
-      <button data-v="b">?</button>
-      <button data-v="c">?</button>
+      <button class="sel" data-v="25">25</button>
+      <button data-v="50">50</button>
+      <button data-v="100">100</button>
     </div>
 
     <div style="border:3px solid #b03020;border-radius:10px;background-color:#000000;padding:20px 12px 12px;display:flex;flex-direction:column;align-items:center;width:92%;min-height:250px;box-sizing:border-box;margin:auto auto 28px;">
@@ -366,7 +367,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v10</div>
+    <div class="app-ver">v11</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -398,9 +399,9 @@ if('serviceWorker' in navigator){
       <div class="res-ens" id="resEns" style="display:none"></div>
       <div class="res-quad">
         <div class="rq rq-media">
-          <div class="rq-k">Cuadrados</div>
+          <div class="rq-k" id="rK1">Cuadrados</div>
           <div class="rq-main" id="rAvg">--</div>
-          <div class="rq-k">pulsados</div>
+          <div class="rq-k" id="rK2">pulsados</div>
         </div>
         <div class="rq">
           <div class="rq-v" id="rTime">0:00.00</div>
@@ -408,11 +409,11 @@ if('serviceWorker' in navigator){
         </div>
         <div class="rq">
           <div class="rq-v" id="rBest">--</div>
-          <div class="rq-k">Media (ms)</div>
+          <div class="rq-k" id="rK3">Media (ms)</div>
         </div>
         <div class="rq">
           <div class="rq-v" id="rWorst">--</div>
-          <div class="rq-k">Mejor (ms)</div>
+          <div class="rq-k" id="rK4">Mejor (ms)</div>
         </div>
       </div>
       <div class="res-chart" id="resChart"></div>
@@ -433,7 +434,7 @@ if('serviceWorker' in navigator){
   <section id="fail" class="screen">
     <div class="center-body">
       <div class="fail-title">Fallo</div>
-      <div class="fail-msg">Te has equivocado, ese no era el s&#237;mbolo. T&#243;mate tiempo y f&#237;jate bien.</div>
+      <div class="fail-msg" id="failMsg">Te has equivocado. T&#243;mate tiempo y f&#237;jate bien.</div>
     </div>
   <div class="results-actions">
     <button class="game-ctrl-btn" onclick="goHome()">&#8592; Inicio</button>
@@ -447,16 +448,16 @@ if('serviceWorker' in navigator){
       <div class="rank-tabs" id="segModoR">
         <button class="rank-tab" data-v="normal">Normal</button>
         <button class="rank-tab" data-v="extremo" data-soon="1">Extremo</button>
-        <button class="rank-tab" data-v="limite" data-soon="1">L&#237;mite</button>
+        <button class="rank-tab" data-v="limite">L&#237;mite</button>
       </div>
       <div class="rank-tabs" id="segEstR" style="margin-top:8px;">
         <button class="rank-tab" data-v="a">?</button>
         <button class="rank-tab" data-v="b">?</button>
       </div>
       <div class="rank-tabs" id="segEnsR" style="margin-top:8px;">
-        <button class="rank-tab" data-v="a">?</button>
-        <button class="rank-tab" data-v="b">?</button>
-        <button class="rank-tab" data-v="c">?</button>
+        <button class="rank-tab" data-v="25">25</button>
+        <button class="rank-tab" data-v="50">50</button>
+        <button class="rank-tab" data-v="100">100</button>
       </div>
       <div id="rkList" class="rank-full-list"></div>
     </div>
@@ -518,7 +519,7 @@ function seg(id){
 }
 function selVal(id){ var b=$(id).querySelector('button.sel'); return b?b.getAttribute('data-v'):null; }
 
-var S={mode:'normal',stim:'a',total:'a',name:'RDS',sport:'',times:[],t0:0,running:false,raf:0,lock:true,countIv:0,coverTo:0,resEnsayos:0,pressed:0,cells:[],sq:[]};
+var S={mode:'normal',stim:'a',total:'25',totalN:25,queue:[],cur:-1,name:'RDS',sport:'',times:[],t0:0,running:false,raf:0,lock:true,countIv:0,coverTo:0,resEnsayos:0,pressed:0,cells:[],sq:[]};
 
 /* ---------- Modo NORMAL (2026-10-08) ----------
    Rejilla de 5x5. Al empezar, 5 cuadrados (al azar) empiezan a ACORTARSE en altura y tardan SQ_START_MS en desaparecer. Se pulsan antes de que
@@ -540,10 +541,11 @@ var SQ_TWO_FROM=20;     /* v6: SOLO al llegar a 20 pulsados empiezan a bajar dos
 var SQ_MILESTONE_EVERY=10;   /* ... y lo mismo en 30, 40, ... (cada 10 desde SQ_TWO_FROM) */
 
 function filterInitials(el){ el.value=el.value.replace(/[^A-Za-z]/g,'').toUpperCase(); }
-function startGame(){ try{ warmRank(selVal('segModo')||'normal', selVal('segEstimulo')||'a', selVal('segEnsayos')||'a'); }catch(e){}
+function startGame(){ try{ var m0=selVal('segModo')||'normal'; warmRank(m0, selVal('segEstimulo')||'a', m0==='limite'?'0':(selVal('segEnsayos')||'25')); }catch(e){}
   S.mode=selVal('segModo')||'normal';
   S.stim=selVal('segEstimulo')||'a';
-  S.total=selVal('segEnsayos')||'a';
+  S.total=(S.mode==='limite') ? '0' : (selVal('segEnsayos')||'25');   /* Limite: sin 25/50/100 (clave unica '0') */
+  S.totalN=parseInt(S.total,10)||0;
   var nm=($('user-ini-input').value||'RDS').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);
   S.name=nm||'RDS';
   S.sport=($('user-sport-select')&&$('user-sport-select').value)||'';
@@ -583,7 +585,7 @@ function runGame(){
   sqBuildGrid();
   $('stTimeK').textContent='Tiempo'; $('stTime').textContent='0:00.00';
   $('stAvgK').textContent='Media react.'; $('stAvg').textContent='--';
-  $('trialCount').textContent='0'; setProgress(0);
+  $('trialCount').textContent=(S.mode==='normal') ? ('0/'+S.totalN) : '0'; setProgress(0);
   var n=3, el=$('sqCount');
   function step(){
     if(n<=0){ el.textContent=''; beginPlay(); return; }
@@ -593,6 +595,7 @@ function runGame(){
   step();
 }
 function beginPlay(){
+  if(S.mode==='normal'){ nrmBegin(); return; }
   S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
   sqStart(SQ_FIRST, -1);
   S.raf=requestAnimationFrame(sqLoop);
@@ -619,6 +622,7 @@ function sqLoop(){
 }
 function onPick(cell){
   if(!S.running || S.lock) return;
+  if(S.mode==='normal'){ nrmPick(cell); return; }
   var i=parseInt(cell.getAttribute('data-i'),10), c=S.cells[i];
   if(!c || c.st==='dead') return;                      /* hueco vacio: no hace nada */
   if(c.st==='full'){ sndFail(); finish('wrong'); return; }   /* no se estaba acortando */
@@ -629,6 +633,71 @@ function onPick(cell){
   $('trialCount').textContent=String(S.pressed);
   updateStats();
   sqStart(sqNewCount(), i);
+}
+
+/* ---------- Modo NORMAL (2026-10-08) ----------
+   Los cuadrados bajan DE UNO EN UNO: uno se pone en rojo y empieza a acortarse (SQN_MS = 1000 ms en llegar abajo); al pulsarlo se ELIMINA (hueco vacio)
+   y empieza otro, hasta completar los 25. En 50 al acabar los 25 TODOS se renuevan (vuelven a aparecer) y se repite; en 100, cuatro vueltas.
+   Resultado = reaccion media (desde que el cuadrado empieza a acortarse hasta que se pulsa). El orden es al azar en cada vuelta.
+   DECISIONES MIAS: si el cuadrado llega abajo sin pulsarlo, o se pulsa uno que no es el activo, el ejercicio se da por FALLADO (pantalla Fallo, no se guarda). */
+var SQN_MS=1000;
+function nrmCycle(){   /* todos los cuadrados (re)aparecen y se ordenan al azar */
+  var k;
+  for(k=0;k<SQ_N;k++){ S.cells[k]={st:'full', t0:0, dur:0}; S.sq[k].classList.remove('dead','shr'); S.sq[k].firstChild.style.height='100%'; }
+  S.queue=[]; for(k=0;k<SQ_N;k++){ S.queue.push(k); } shuffleArr(S.queue);
+}
+function nrmNext(){
+  var i=S.queue.shift(), c=S.cells[i];
+  c.st='shrink'; c.t0=performance.now(); c.dur=SQN_MS; S.sq[i].classList.add('shr'); S.cur=i;
+}
+function nrmBegin(){
+  S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
+  nrmCycle(); nrmNext();
+  S.raf=requestAnimationFrame(nrmLoop);
+}
+function nrmLoop(){
+  if(!S.running) return;
+  var now=performance.now(), c=S.cells[S.cur], f;
+  $('stTime').textContent=fmtTime(now-S.t0);
+  f=1-(now-c.t0)/c.dur;
+  if(f<=0){ S.sq[S.cur].firstChild.style.height='0%'; failNormal('Se te ha escapado un cuadrado. Vuelve a intentarlo.'); return; }
+  S.sq[S.cur].firstChild.style.height=(f*100).toFixed(1)+'%';
+  S.raf=requestAnimationFrame(nrmLoop);
+}
+function nrmPick(cell){
+  var i=parseInt(cell.getAttribute('data-i'),10), c=S.cells[i];
+  if(!c || c.st==='dead') return;                       /* hueco vacio: no hace nada */
+  if(i!==S.cur){ failNormal('Has pulsado un cuadrado que no era el que se acortaba. Vuelve a intentarlo.'); return; }
+  var rt=performance.now()-c.t0;
+  S.times.push(rt); S.pressed++;
+  sndSymbol();
+  c.st='dead'; S.sq[i].classList.remove('shr'); S.sq[i].classList.add('dead');   /* el pulsado se elimina */
+  $('trialCount').textContent=S.pressed+'/'+S.totalN; setProgress(S.pressed/S.totalN);
+  updateStats();
+  if(S.pressed>=S.totalN){ finishNormal(); return; }
+  if(!S.queue.length){ nrmCycle(); }                    /* acabaron los 25: vuelven a aparecer todos */
+  nrmNext();
+}
+function failNormal(msg){
+  S.running=false; S.lock=true; cancelAnimationFrame(S.raf);
+  if(S.coverTo){ clearTimeout(S.coverTo); S.coverTo=0; }
+  S.saved=null; sndFail();
+  var fm=$('failMsg'); if(fm){ fm.textContent=msg; }
+  show('fail');
+}
+function finishNormal(){
+  S.running=false; S.lock=true; cancelAnimationFrame(S.raf);
+  var total=performance.now()-S.t0, c=calc();
+  $('rK1').textContent='Media de reacci\u00f3n'; $('rK2').textContent='por acierto'; $('rK3').textContent='Mejor (ms)'; $('rK4').textContent='Peor (ms)';
+  $('resMsg').style.display='none'; $('resEns').style.display='none';
+  $('rAvg').textContent=Math.round(c.avg)+' ms';
+  $('rTime').textContent=fmtTime(total);
+  $('rBest').textContent=String(Math.round(c.best));
+  $('rWorst').textContent=String(Math.round(c.worst));
+  S.resAvg=c.avg; S.resTotal=total; S.resEnsayos=S.pressed; S.saved=false;
+  renderChart(S.times);
+  var gb=$('btnGuardar'); if(gb){ gb.disabled=false; gb.textContent='Guardar resultado'; }
+  showSaveScreen();
 }
 
 function setProgress(frac){ $('prog').style.width=(Math.max(0,Math.min(1,frac))*100)+'%'; }
@@ -709,6 +778,7 @@ function finish(reason){
   if(S.coverTo){ clearTimeout(S.coverTo); S.coverTo=0; }
   var total=performance.now()-S.t0, c=calc();
   $('resMsg').textContent = (reason==='wrong') ? 'Has pulsado un cuadrado que no se estaba acortando' : (reason==='last' ? 'Se te ha escapado el último cuadrado que se estaba acortando' : 'Fin del ejercicio: solo quedan '+SQ_KEEP+' cuadrados');
+  $('rK1').textContent='Cuadrados'; $('rK2').textContent='pulsados'; $('rK3').textContent='Media (ms)'; $('rK4').textContent='Mejor (ms)';
   $('resMsg').style.display='block'; $('resEns').style.display='none';
   $('rAvg').textContent=String(S.pressed);
   $('rTime').textContent=fmtTime(total);
@@ -725,8 +795,9 @@ function loadLb(k){ try{ return JSON.parse(localStorage.getItem(k)||'[]'); }catc
 function rankCacheKey(mode,stim,total){ return 'rds_sqr_rankcache_'+mode+'_'+stim+'_'+total; }
 function loadRankCache(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }
 function saveRankCache(k,rows){ try{ localStorage.setItem(k, JSON.stringify(rows)); localStorage.setItem(k+'_ts', String(Date.now())); }catch(e){} }
-function sortLb(lb,mode){   /* Squares: mas cuadrados pulsados primero; desempate por reaccion media */
-  lb.sort(function(a,b){ return ((b.ensayos||0)-(a.ensayos||0))||(a.avg-b.avg); });
+function sortLb(lb,mode){   /* Limite: mas cuadrados pulsados primero, desempate por reaccion media; Normal: reaccion media */
+  if(mode==='limite'){ lb.sort(function(a,b){ return ((b.ensayos||0)-(a.ensayos||0))||(a.avg-b.avg); }); }
+  else { lb.sort(function(a,b){ return a.avg-b.avg; }); }
 }
 function saveScore(avg,total){
   var nm = S.sport ? (S.name+'-'+S.sport) : S.name;
@@ -776,7 +847,7 @@ function renderRankList(list, el, m, latest){
   function rankBetter(a,b){
     if(a==null) return false; if(b==null) return true;
     var av=(a.avg==null?9999:a.avg), bv=(b.avg==null?9999:b.avg);
-    {
+    if(m==='limite'){
       var ae=(a.ensayos||0), be=(b.ensayos||0);
       return ae>be || (ae===be && av<bv);
     }
@@ -803,7 +874,7 @@ function renderRankList(list, el, m, latest){
     pos.textContent=posLabel;
     var nm=document.createElement('div');nm.className='rank-full-name';nm.textContent=entry.name;
     var ms=document.createElement('div');ms.className='rank-full-ms';
-    ms.textContent=entry.avg+' ms';
+    ms.textContent=(m==='limite') ? ((entry.ensayos||0)+'/'+entry.avg) : (entry.avg+' ms');
     var dt=document.createElement('div');dt.className='rank-full-date';dt.textContent=entry.ts?fmtDate(entry.ts):'';
     row.appendChild(pos);row.appendChild(nm);row.appendChild(ms);row.appendChild(dt);
     return row;
@@ -833,8 +904,9 @@ function renderRankList(list, el, m, latest){
 function rankFromSel(){
   var mode=selVal('segModoR')||'normal';
   var stim=selVal('segEstR')||'a';
-  var total=selVal('segEnsR')||'a';
-  renderRank(mode,stim,total);
+  var lim=(mode==='limite');   /* Limite: sin 25/50/100 (clave unica '0'), ese selector queda anulado */
+  $('segEnsR').classList.toggle('off', lim);
+  renderRank(mode,stim,lim ? '0' : (selVal('segEnsR')||'25'));
 }
 function segRank(id){
   var box=$(id);
@@ -874,9 +946,10 @@ function showRanking(){
   updateRankSaveBtn();
   var mode=selVal('segModo')||'normal';
   var stim=selVal('segEstimulo')||'a';
-  var total=selVal('segEnsayos')||'a';
-  setSeg('segModoR',mode); setSeg('segEstR',stim); setSeg('segEnsR',total);
-  renderRank(mode,stim,total); show('ranking');
+  var tot=selVal('segEnsayos')||'25';
+  setSeg('segModoR',mode); setSeg('segEstR',stim); setSeg('segEnsR',tot);
+  $('segEnsR').classList.toggle('off', mode==='limite');
+  renderRank(mode,stim,mode==='limite' ? '0' : tot); show('ranking');
 }
 function capName(rows,max){
   var seen={}, out=[], i, nm;
@@ -955,6 +1028,9 @@ function warmRank(mode,stim,total){
 function goHome(){ if(S.countIv){clearInterval(S.countIv);S.countIv=0;} if(S.coverTo){clearTimeout(S.coverTo);S.coverTo=0;} $('sqCount').textContent=''; S.running=false; S.lock=true; cancelAnimationFrame(S.raf); show('home'); }
 
 seg('segModo'); seg('segEstimulo'); seg('segEnsayos');
+function applyModeUI(){ $('segEnsayos').classList.toggle('off', selVal('segModo')==='limite'); }
+$('segModo').addEventListener('click', applyModeUI);
+applyModeUI();
 segRank('segModoR'); segRank('segEstR'); segRank('segEnsR');
 $('btnRank2').addEventListener('click', showRanking);
 $('btnGuardar').addEventListener('click', function(){
