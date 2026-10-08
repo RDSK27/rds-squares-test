@@ -194,7 +194,7 @@ if('serviceWorker' in navigator){
   .sq.dead .sq-fill{display:none;}
   .sq-count{position:absolute;left:0;right:0;top:50%;margin-top:-70px;text-align:center;color:var(--rojo);font-weight:900;font-size:130px;line-height:1;-webkit-text-stroke:4px #fff;paint-order:stroke fill;pointer-events:none;z-index:5;}   /* rojo con borde blanco: se ve sobre blanco y sobre negro */
   .segment button[data-soon],.rank-tab[data-soon]{opacity:.38;cursor:default;}
-  .segment.off,.rank-tabs.off{opacity:.35;pointer-events:none;}   /* Limite: x1/x2/x4 no aplica */
+  .segment.off,.rank-tabs.off{opacity:.35;pointer-events:none;}   /* Limite: Eliminar/Renovar y x1/x2/x4 no aplican */
   .cell.empty{background:#fff;}
   .grid.covered .cell svg{visibility:hidden;}
   .cell{border:2px solid var(--negro);display:flex;align-items:center;justify-content:center;background:#fff;}
@@ -312,8 +312,8 @@ if('serviceWorker' in navigator){
     </div>
 
     <div class="segment" id="segEstimulo">
-      <button class="sel" data-v="a">?</button>
-      <button data-v="b">?</button>
+      <button class="sel" data-v="a">Eliminar</button>
+      <button data-v="b">Renovar</button>
     </div>
 
     <div class="segment" id="segEnsayos">
@@ -370,7 +370,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v18</div>
+    <div class="app-ver">v19</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -454,8 +454,8 @@ if('serviceWorker' in navigator){
         <button class="rank-tab" data-v="limite">L&#237;mite</button>
       </div>
       <div class="rank-tabs" id="segEstR" style="margin-top:8px;">
-        <button class="rank-tab" data-v="a">?</button>
-        <button class="rank-tab" data-v="b">?</button>
+        <button class="rank-tab" data-v="a">Eliminar</button>
+        <button class="rank-tab" data-v="b">Renovar</button>
       </div>
       <div class="rank-tabs" id="segEnsR" style="margin-top:8px;">
         <button class="rank-tab" data-v="x1">x1</button>
@@ -544,9 +544,9 @@ var SQ_TWO_FROM=20;     /* v6: SOLO al llegar a 20 pulsados empiezan a bajar dos
 var SQ_MILESTONE_EVERY=10;   /* ... y lo mismo en 30, 40, ... (cada 10 desde SQ_TWO_FROM) */
 
 function filterInitials(el){ el.value=el.value.replace(/[^A-Za-z]/g,'').toUpperCase(); }
-function startGame(){ try{ var m0=selVal('segModo')||'normal'; warmRank(m0, selVal('segEstimulo')||'a', m0==='limite'?'0':(selVal('segEnsayos')||'x1')); }catch(e){}
+function startGame(){ try{ var m0=selVal('segModo')||'normal'; warmRank(m0, m0==='limite'?'a':(selVal('segEstimulo')||'a'), m0==='limite'?'0':(selVal('segEnsayos')||'x1')); }catch(e){}
   S.mode=selVal('segModo')||'normal';
-  S.stim=selVal('segEstimulo')||'a';
+  S.stim=(S.mode==='limite') ? 'a' : (selVal('segEstimulo')||'a');   /* v19: a = ELIMINAR (el pulsado queda negro), b = RENOVAR (vuelve a blanco); Limite siempre 'a' */
   S.total=(S.mode==='limite') ? '0' : (selVal('segEnsayos')||'x1');   /* Limite: sin x1/x2/x4 (clave unica '0') */
   S.totalN=(S.mode==='limite')?0:SQ_N*({x1:1,x2:2,x4:4}[S.total]||1);   /* v16: x1 = una vuelta de los 16 cuadrados; x2 y x4 = 2 y 4 vueltas */
   var nm=($('user-ini-input').value||'RDS').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);
@@ -653,11 +653,14 @@ function nrmCycle(){   /* todos los cuadrados (re)aparecen y se ordenan al azar 
   S.queue=[]; for(k=0;k<SQ_N;k++){ S.queue.push(k); } shuffleArr(S.queue);
 }
 function nrmNext(){
-  var i=S.queue.shift(), c=S.cells[i];
+  var i, c, pool, k;
+  if(S.stim==='b'){ pool=[]; for(k=0;k<SQ_N;k++){ if(k!==S.cur) pool.push(k); } i=pool[Math.floor(Math.random()*pool.length)]; }   /* RENOVAR: al azar entre los 16, salvo el recien pulsado */
+  else { i=S.queue.shift(); }
+  c=S.cells[i];
   c.st='shrink'; c.t0=performance.now(); c.dur=SQN_MS; S.sq[i].classList.add('shr'); S.cur=i;
 }
 function nrmBegin(){
-  S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
+  S.cur=-1; S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
   nrmCycle(); nrmNext();
   S.raf=requestAnimationFrame(nrmLoop);
 }
@@ -677,11 +680,12 @@ function nrmPick(cell){
   var rt=performance.now()-c.t0;
   S.times.push(rt); S.pressed++;
   sndSymbol();
-  c.st='dead'; S.sq[i].classList.remove('shr'); S.sq[i].classList.add('dead');   /* el pulsado se elimina */
+  if(S.stim==='b'){ c.st='full'; c.t0=0; c.dur=0; S.sq[i].classList.remove('shr'); S.sq[i].firstChild.style.height='100%'; }   /* RENOVAR: vuelve a blanco */
+  else { c.st='dead'; S.sq[i].classList.remove('shr'); S.sq[i].classList.add('dead'); }   /* ELIMINAR: el pulsado queda negro */
   $('trialCount').textContent=S.pressed+'/'+S.totalN; setProgress(S.pressed/S.totalN);
   updateStats();
   if(S.pressed>=S.totalN){ finishNormal(); return; }
-  if(!S.queue.length){ nrmCycle(); }                    /* acabaron los 16: vuelven a aparecer todos */
+  if(S.stim!=='b' && !S.queue.length){ nrmCycle(); }    /* ELIMINAR: acabaron los 16: vuelven a aparecer todos */
   nrmNext();
 }
 /* ---------- Modo EXTREMO (2026-10-08) ----------
@@ -694,15 +698,18 @@ function nrmPick(cell){
 var SQE_MS=1000, SQE_N=3;   /* v18: 3 cuadrados a la vez (antes 2) */
 function exNext(){
   var need=Math.min(SQE_N, S.totalN-S.pressed), k, i, c;
-  if(!S.queue.length){ nrmCycle(); }
+  var pool=[];
+  if(S.stim==='b'){ for(k=0;k<SQ_N;k++){ if((S.last||[]).indexOf(k)<0) pool.push(k); } shuffleArr(pool); }   /* RENOVAR: al azar, sin repetir los de la ronda anterior */
+  else if(!S.queue.length){ nrmCycle(); }
   S.curs=[];
-  for(k=0;k<need && S.queue.length;k++){
-    i=S.queue.shift(); c=S.cells[i];
+  for(k=0;k<need && (S.stim==='b' ? pool.length : S.queue.length);k++){
+    i=(S.stim==='b') ? pool.shift() : S.queue.shift(); c=S.cells[i];
     c.st='shrink'; c.t0=performance.now(); c.dur=SQE_MS; S.sq[i].classList.add('shr'); S.curs.push(i);
   }
+  S.last=S.curs.slice();
 }
 function exBegin(){
-  S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
+  S.last=[]; S.coverTo=0; S.lock=false; S.running=true; S.t0=performance.now();
   nrmCycle(); exNext();
   S.raf=requestAnimationFrame(exLoop);
 }
@@ -725,7 +732,8 @@ function exPick(cell){
   var rt=performance.now()-c.t0;
   S.times.push(rt); S.pressed++;
   sndSymbol();
-  c.st='dead'; S.sq[i].classList.remove('shr'); S.sq[i].classList.add('dead');
+  if(S.stim==='b'){ c.st='full'; c.t0=0; c.dur=0; S.sq[i].classList.remove('shr'); S.sq[i].firstChild.style.height='100%'; }   /* RENOVAR: vuelve a blanco */
+  else { c.st='dead'; S.sq[i].classList.remove('shr'); S.sq[i].classList.add('dead'); }
   S.curs.splice(pos,1);
   $('trialCount').textContent=S.pressed+'/'+S.totalN; setProgress(S.pressed/S.totalN);
   updateStats();
@@ -957,9 +965,9 @@ function renderRankList(list, el, m, latest){
 
 function rankFromSel(){
   var mode=selVal('segModoR')||'normal';
-  var stim=selVal('segEstR')||'a';
-  var lim=(mode==='limite');   /* Limite: sin x1/x2/x4 (clave unica '0'), ese selector queda anulado */
-  $('segEnsR').classList.toggle('off', lim);
+  var lim=(mode==='limite');
+  var stim=lim ? 'a' : (selVal('segEstR')||'a');   /* Limite: sin x1/x2/x4 (clave unica '0'), ese selector queda anulado */
+  $('segEnsR').classList.toggle('off', lim); $('segEstR').classList.toggle('off', lim);
   renderRank(mode,stim,lim ? '0' : (selVal('segEnsR')||'x1'));
 }
 function segRank(id){
@@ -999,10 +1007,10 @@ function showRanking(){
   if(btn) btn.textContent='Mostrar repetidos';
   updateRankSaveBtn();
   var mode=selVal('segModo')||'normal';
-  var stim=selVal('segEstimulo')||'a';
+  var stim=(mode==='limite') ? 'a' : (selVal('segEstimulo')||'a');
   var tot=selVal('segEnsayos')||'x1';
   setSeg('segModoR',mode); setSeg('segEstR',stim); setSeg('segEnsR',tot);
-  $('segEnsR').classList.toggle('off', mode==='limite');
+  $('segEnsR').classList.toggle('off', mode==='limite'); $('segEstR').classList.toggle('off', mode==='limite');
   renderRank(mode,stim,mode==='limite' ? '0' : tot); show('ranking');
 }
 function capName(rows,max){
@@ -1082,7 +1090,7 @@ function warmRank(mode,stim,total){
 function goHome(){ if(S.countIv){clearInterval(S.countIv);S.countIv=0;} if(S.coverTo){clearTimeout(S.coverTo);S.coverTo=0;} $('sqCount').textContent=''; S.running=false; S.lock=true; cancelAnimationFrame(S.raf); show('home'); }
 
 seg('segModo'); seg('segEstimulo'); seg('segEnsayos');
-function applyModeUI(){ $('segEnsayos').classList.toggle('off', selVal('segModo')==='limite'); }
+function applyModeUI(){ var l=selVal('segModo')==='limite'; $('segEnsayos').classList.toggle('off', l); $('segEstimulo').classList.toggle('off', l); }
 $('segModo').addEventListener('click', applyModeUI);
 applyModeUI();
 segRank('segModoR'); segRank('segEstR'); segRank('segEnsR');

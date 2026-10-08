@@ -1,5 +1,5 @@
 /* RDS Squares Reaction - Service Worker */
-var CACHE = 'squares-v18';
+var CACHE = 'squares-v19';
 var ASSETS = [
   './',
   './index.html',
