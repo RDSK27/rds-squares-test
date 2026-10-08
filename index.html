@@ -186,6 +186,7 @@ if('serviceWorker' in navigator){
   .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:6px;touch-action:none;}
   .sq{position:relative;border:2px solid var(--negro);background:#fff;overflow:hidden;box-sizing:border-box;}
   .sq-fill{position:absolute;left:0;right:0;bottom:0;height:100%;background:var(--negro);}
+  .sq.shr .sq-fill{background:var(--rojo);}   /* el cuadrado que se esta acortando va en ROJO */
   .sq.dead{border-color:transparent;}
   .sq.dead .sq-fill{display:none;}
   .sq-count{position:absolute;left:0;right:0;top:50%;margin-top:-70px;text-align:center;color:#fff;font-weight:900;font-size:130px;line-height:1;-webkit-text-stroke:3px var(--negro);paint-order:stroke fill;pointer-events:none;z-index:5;}
@@ -365,7 +366,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v2</div>
+    <div class="app-ver">v3</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -565,7 +566,7 @@ function sqStart(count, exclude){   /* empiezan a acortarse 'count' cuadrados al
   var pool=[], k, now=performance.now(), dur=sqDur(), j, c;
   for(k=0;k<SQ_N;k++){ if(S.cells[k].st==='full' && k!==exclude) pool.push(k); }
   shuffleArr(pool);
-  for(j=0;j<count && j<pool.length;j++){ c=S.cells[pool[j]]; c.st='shrink'; c.t0=now; c.dur=dur; }
+  for(j=0;j<count && j<pool.length;j++){ c=S.cells[pool[j]]; c.st='shrink'; c.t0=now; c.dur=dur; S.sq[pool[j]].classList.add('shr'); }
 }
 function shuffleArr(a){ var i,j,t; for(i=a.length-1;i>0;i--){ j=Math.floor(Math.random()*(i+1)); t=a[i];a[i]=a[j];a[j]=t; } return a; }
 
@@ -620,7 +621,7 @@ function onPick(cell){
   var rt=performance.now()-c.t0;
   S.times.push(rt); S.pressed++;
   sndSymbol();
-  c.st='full'; c.t0=0; c.dur=0; S.sq[i].firstChild.style.height='100%';   /* se renueva */
+  c.st='full'; c.t0=0; c.dur=0; S.sq[i].classList.remove('shr'); S.sq[i].firstChild.style.height='100%';   /* se renueva */
   $('trialCount').textContent=String(S.pressed);
   updateStats();
   sqStart(sqNewCount(), i);
