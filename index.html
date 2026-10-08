@@ -370,7 +370,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v17</div>
+    <div class="app-ver">v18</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -685,15 +685,15 @@ function nrmPick(cell){
   nrmNext();
 }
 /* ---------- Modo EXTREMO (2026-10-08) ----------
-   Igual que NORMAL, pero salen DOS cuadrados a la vez (los dos empiezan a acortarse en el mismo instante, SQE_MS = 1000 ms hasta llegar abajo).
+   Igual que NORMAL, pero salen TRES cuadrados a la vez (v18; antes DOS) (los dos empiezan a acortarse en el mismo instante, SQE_MS = 1000 ms hasta llegar abajo).
    Hay que pulsar los dos: si cualquiera de los dos llega abajo sin pulsarse, o se pulsa un cuadrado que no se esta acortando, el ejercicio se da
    por FALLADO. No salen otros dos hasta haber pulsado AMBOS. Cada pulsacion cuenta como un acierto (x1/x2/x4 = 16/32/64 cuadrados pulsados, como en Normal);
-   la reaccion de cada cuadrado va desde que empezo a acortarse hasta que se pulsa. Los 16 cuadrados se reparten de dos en dos (8 rondas por vuelta, sin ronda suelta);
+   la reaccion de cada cuadrado va desde que empezo a acortarse hasta que se pulsa. Los 16 cuadrados se reparten de tres en tres (v18): 5 rondas de 3 y una ultima de UN solo cuadrado por vuelta (16 no es multiplo de 3; decision mia);
    en x2 y x4 las vueltas se renuevan como en Normal.
    Se guarda en su propio ranking (mode='extremo'), ordenado por reaccion media. */
-var SQE_MS=1000;
+var SQE_MS=1000, SQE_N=3;   /* v18: 3 cuadrados a la vez (antes 2) */
 function exNext(){
-  var need=Math.min(2, S.totalN-S.pressed), k, i, c;
+  var need=Math.min(SQE_N, S.totalN-S.pressed), k, i, c;
   if(!S.queue.length){ nrmCycle(); }
   S.curs=[];
   for(k=0;k<need && S.queue.length;k++){
@@ -730,7 +730,7 @@ function exPick(cell){
   $('trialCount').textContent=S.pressed+'/'+S.totalN; setProgress(S.pressed/S.totalN);
   updateStats();
   if(S.pressed>=S.totalN){ finishNormal(); return; }
-  if(S.curs.length===0){ exNext(); }                    /* hasta pulsar los DOS no salen los siguientes */
+  if(S.curs.length===0){ exNext(); }                    /* hasta pulsar los TRES no salen los siguientes */
 }
 function failNormal(msg){
   S.running=false; S.lock=true; cancelAnimationFrame(S.raf);
