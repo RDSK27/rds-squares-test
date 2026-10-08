@@ -194,7 +194,7 @@ if('serviceWorker' in navigator){
   .sq.dead .sq-fill{display:none;}
   .sq-count{position:absolute;left:0;right:0;top:50%;margin-top:-70px;text-align:center;color:var(--rojo);font-weight:900;font-size:130px;line-height:1;-webkit-text-stroke:4px #fff;paint-order:stroke fill;pointer-events:none;z-index:5;}   /* rojo con borde blanco: se ve sobre blanco y sobre negro */
   .segment button[data-soon],.rank-tab[data-soon]{opacity:.38;cursor:default;}
-  .segment.off,.rank-tabs.off{opacity:.35;pointer-events:none;}   /* Limite: 25/50/100 no aplica */
+  .segment.off,.rank-tabs.off{opacity:.35;pointer-events:none;}   /* Limite: x1/x2/x4 no aplica */
   .cell.empty{background:#fff;}
   .grid.covered .cell svg{visibility:hidden;}
   .cell{border:2px solid var(--negro);display:flex;align-items:center;justify-content:center;background:#fff;}
@@ -317,9 +317,9 @@ if('serviceWorker' in navigator){
     </div>
 
     <div class="segment" id="segEnsayos">
-      <button class="sel" data-v="25">25</button>
-      <button data-v="50">50</button>
-      <button data-v="100">100</button>
+      <button class="sel" data-v="x1">x1</button>
+      <button data-v="x2">x2</button>
+      <button data-v="x4">x4</button>
     </div>
 
     <div style="border:3px solid #b03020;border-radius:10px;background-color:#000000;padding:20px 12px 12px;display:flex;flex-direction:column;align-items:center;width:92%;min-height:250px;box-sizing:border-box;margin:auto auto 28px;">
@@ -370,7 +370,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v15</div>
+    <div class="app-ver">v16</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -458,9 +458,9 @@ if('serviceWorker' in navigator){
         <button class="rank-tab" data-v="b">?</button>
       </div>
       <div class="rank-tabs" id="segEnsR" style="margin-top:8px;">
-        <button class="rank-tab" data-v="25">25</button>
-        <button class="rank-tab" data-v="50">50</button>
-        <button class="rank-tab" data-v="100">100</button>
+        <button class="rank-tab" data-v="x1">x1</button>
+        <button class="rank-tab" data-v="x2">x2</button>
+        <button class="rank-tab" data-v="x4">x4</button>
       </div>
       <div id="rkList" class="rank-full-list"></div>
     </div>
@@ -522,7 +522,7 @@ function seg(id){
 }
 function selVal(id){ var b=$(id).querySelector('button.sel'); return b?b.getAttribute('data-v'):null; }
 
-var S={mode:'normal',stim:'a',total:'25',totalN:25,queue:[],cur:-1,curs:[],name:'RDS',sport:'',times:[],t0:0,running:false,raf:0,lock:true,countIv:0,coverTo:0,resEnsayos:0,pressed:0,cells:[],sq:[]};
+var S={mode:'normal',stim:'a',total:'x1',totalN:16,queue:[],cur:-1,curs:[],name:'RDS',sport:'',times:[],t0:0,running:false,raf:0,lock:true,countIv:0,coverTo:0,resEnsayos:0,pressed:0,cells:[],sq:[]};
 
 /* ---------- Modo NORMAL (2026-10-08) ----------
    Rejilla de 5x5. Al empezar, 5 cuadrados (al azar) empiezan a ACORTARSE en altura y tardan SQ_START_MS en desaparecer. Se pulsan antes de que
@@ -533,7 +533,7 @@ var S={mode:'normal',stim:'a',total:'25',totalN:25,queue:[],cur:-1,curs:[],name:
    DECISIONES MIAS no confirmadas: (1) pulsar un cuadrado activo que NO se esta acortando termina el ejercicio (si no se podria pulsar todo
    sin parar); pulsar un hueco vacio no hace nada; (2) [v10, pedido de Roberto] si ya no queda NINGUNO acortandose (se te escapa el ultimo) el ejercicio
    termina; (3) suelo de SQ_MIN_MS (no indicado); (4) los nuevos nunca incluyen el que acabas de pulsar. */
-var SQ_N=25, SQ_COLS=5; /* rejilla 5x5 (v15: en modo NORMAL es 4x4 = 16 cuadrados; ver sqBuildGrid) */
+var SQ_N=16, SQ_COLS=4; /* v16: rejilla 4x4 = 16 cuadrados en TODOS los modos (v15 solo Normal) */
 var SQ_FIRST=5;         /* cuadrados que se acortan al empezar */
 var SQ_KEEP=5;          /* el ejercicio termina cuando solo quedan 5 activos */
 var SQ_START_MS=1500;   /* tiempo que tarda un cuadrado en desaparecer al empezar (v8: 1500 ms; antes 1250, 1000 y 750) */
@@ -544,11 +544,11 @@ var SQ_TWO_FROM=20;     /* v6: SOLO al llegar a 20 pulsados empiezan a bajar dos
 var SQ_MILESTONE_EVERY=10;   /* ... y lo mismo en 30, 40, ... (cada 10 desde SQ_TWO_FROM) */
 
 function filterInitials(el){ el.value=el.value.replace(/[^A-Za-z]/g,'').toUpperCase(); }
-function startGame(){ try{ var m0=selVal('segModo')||'normal'; warmRank(m0, selVal('segEstimulo')||'a', m0==='limite'?'0':(selVal('segEnsayos')||'25')); }catch(e){}
+function startGame(){ try{ var m0=selVal('segModo')||'normal'; warmRank(m0, selVal('segEstimulo')||'a', m0==='limite'?'0':(selVal('segEnsayos')||'x1')); }catch(e){}
   S.mode=selVal('segModo')||'normal';
   S.stim=selVal('segEstimulo')||'a';
-  S.total=(S.mode==='limite') ? '0' : (selVal('segEnsayos')||'25');   /* Limite: sin 25/50/100 (clave unica '0') */
-  S.totalN=parseInt(S.total,10)||0;
+  S.total=(S.mode==='limite') ? '0' : (selVal('segEnsayos')||'x1');   /* Limite: sin x1/x2/x4 (clave unica '0') */
+  S.totalN=(S.mode==='limite')?0:SQ_N*({x1:1,x2:2,x4:4}[S.total]||1);   /* v16: x1 = una vuelta de los 16 cuadrados; x2 y x4 = 2 y 4 vueltas */
   var nm=($('user-ini-input').value||'RDS').toUpperCase().replace(/[^A-Z]/g,'').slice(0,3);
   S.name=nm||'RDS';
   S.sport=($('user-sport-select')&&$('user-sport-select').value)||'';
@@ -564,7 +564,6 @@ function sqNewCount(){   /* cuantos empiezan a acortarse tras ESTA pulsacion (S.
 }
 function sqBuildGrid(){
   var html='', k;
-  SQ_COLS=(S.mode==='normal')?4:5; SQ_N=SQ_COLS*SQ_COLS;   /* v15: Normal 4x4 (16); Extremo y Limite siguen en 5x5 (25) */
   $('grid').style.gridTemplateColumns='repeat('+SQ_COLS+',1fr)'; $('grid').style.gridTemplateRows='repeat('+SQ_COLS+',1fr)';
   for(k=0;k<SQ_N;k++){ html+='<div class="sq" data-i="'+k+'"><div class="sq-fill"></div></div>'; }
   $('grid').innerHTML=html;
@@ -644,7 +643,7 @@ function onPick(cell){
 
 /* ---------- Modo NORMAL (2026-10-08) ----------
    Los cuadrados bajan DE UNO EN UNO: uno se pone en rojo y empieza a acortarse (SQN_MS = 1000 ms en llegar abajo); al pulsarlo se ELIMINA (hueco vacio)
-   y empieza otro, hasta completar los 25. En 50 al acabar los 25 TODOS se renuevan (vuelven a aparecer) y se repite; en 100, cuatro vueltas.
+   y empieza otro, hasta completar los 16. En x2 al acabar los 16 TODOS se renuevan (vuelven a aparecer) y se repite; en x4, cuatro vueltas.
    Resultado = reaccion media (desde que el cuadrado empieza a acortarse hasta que se pulsa). El orden es al azar en cada vuelta.
    DECISIONES MIAS: si el cuadrado llega abajo sin pulsarlo, o se pulsa uno que no es el activo, el ejercicio se da por FALLADO (pantalla Fallo, no se guarda). */
 var SQN_MS=1000;
@@ -682,15 +681,15 @@ function nrmPick(cell){
   $('trialCount').textContent=S.pressed+'/'+S.totalN; setProgress(S.pressed/S.totalN);
   updateStats();
   if(S.pressed>=S.totalN){ finishNormal(); return; }
-  if(!S.queue.length){ nrmCycle(); }                    /* acabaron los 25: vuelven a aparecer todos */
+  if(!S.queue.length){ nrmCycle(); }                    /* acabaron los 16: vuelven a aparecer todos */
   nrmNext();
 }
 /* ---------- Modo EXTREMO (2026-10-08) ----------
    Igual que NORMAL, pero salen DOS cuadrados a la vez (los dos empiezan a acortarse en el mismo instante, SQE_MS = 1000 ms hasta llegar abajo).
    Hay que pulsar los dos: si cualquiera de los dos llega abajo sin pulsarse, o se pulsa un cuadrado que no se esta acortando, el ejercicio se da
-   por FALLADO. No salen otros dos hasta haber pulsado AMBOS. Cada pulsacion cuenta como un acierto (25/50/100 = cuadrados pulsados, como en Normal);
-   la reaccion de cada cuadrado va desde que empezo a acortarse hasta que se pulsa. Los 25 cuadrados se reparten de dos en dos: el 25 es impar, asi que
-   al agotar cada vuelta de 25 queda una ronda de UN solo cuadrado (decision mia, no confirmada); en 50 y 100 las vueltas se renuevan como en Normal.
+   por FALLADO. No salen otros dos hasta haber pulsado AMBOS. Cada pulsacion cuenta como un acierto (x1/x2/x4 = 16/32/64 cuadrados pulsados, como en Normal);
+   la reaccion de cada cuadrado va desde que empezo a acortarse hasta que se pulsa. Los 16 cuadrados se reparten de dos en dos (8 rondas por vuelta, sin ronda suelta);
+   en x2 y x4 las vueltas se renuevan como en Normal.
    Se guarda en su propio ranking (mode='extremo'), ordenado por reaccion media. */
 var SQE_MS=1000;
 function exNext(){
@@ -959,9 +958,9 @@ function renderRankList(list, el, m, latest){
 function rankFromSel(){
   var mode=selVal('segModoR')||'normal';
   var stim=selVal('segEstR')||'a';
-  var lim=(mode==='limite');   /* Limite: sin 25/50/100 (clave unica '0'), ese selector queda anulado */
+  var lim=(mode==='limite');   /* Limite: sin x1/x2/x4 (clave unica '0'), ese selector queda anulado */
   $('segEnsR').classList.toggle('off', lim);
-  renderRank(mode,stim,lim ? '0' : (selVal('segEnsR')||'25'));
+  renderRank(mode,stim,lim ? '0' : (selVal('segEnsR')||'x1'));
 }
 function segRank(id){
   var box=$(id);
@@ -1001,7 +1000,7 @@ function showRanking(){
   updateRankSaveBtn();
   var mode=selVal('segModo')||'normal';
   var stim=selVal('segEstimulo')||'a';
-  var tot=selVal('segEnsayos')||'25';
+  var tot=selVal('segEnsayos')||'x1';
   setSeg('segModoR',mode); setSeg('segEstR',stim); setSeg('segEnsR',tot);
   $('segEnsR').classList.toggle('off', mode==='limite');
   renderRank(mode,stim,mode==='limite' ? '0' : tot); show('ranking');
