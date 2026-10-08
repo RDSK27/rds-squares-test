@@ -185,9 +185,9 @@ if('serviceWorker' in navigator){
   .progress{flex:1;height:9px;background:var(--seg);border:2px solid var(--borde);}
   .progress > i{display:block;height:100%;background:var(--rojo);width:0%;transition:width .12s linear;}
 
-  .grid-wrap{position:relative;flex:1;min-height:0;display:flex;background:#000;padding:6px;box-sizing:border-box;container-type:size;}   /* v5: fondo NEGRO */
-  .grid{flex:none;margin:auto;width:min(100cqw,100cqh);height:min(100cqw,100cqh);display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:6px;touch-action:none;}   /* v13: rejilla CUADRADA (lado = el menor entre ancho y alto disponibles) -> cuadrados, no rectangulos */
-  .sq{position:relative;border:2px solid #000;background:#000;overflow:hidden;box-sizing:border-box;}   /* borde y parte vacia en negro (el cuadrado se acorta sobre el fondo negro) */
+  .grid-wrap{position:relative;flex:1;min-height:0;display:flex;padding:6px;box-sizing:border-box;container-type:size;}   /* v15: sin fondo negro propio: el negro es solo el de la rejilla (.grid) */
+  .grid{flex:none;margin:auto;width:min(100cqw,100cqh);height:min(100cqw,100cqh);display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:6px;touch-action:none;background:#000;padding:6px;box-sizing:border-box;border-radius:14px;}   /* v15: panel NEGRO solo bajo los cuadrados, esquinas redondeadas. v13: rejilla CUADRADA (lado = el menor entre ancho y alto disponibles) -> cuadrados, no rectangulos */
+  .sq{position:relative;border-radius:14%;border:2px solid #000;background:#000;overflow:hidden;box-sizing:border-box;}   /* borde y parte vacia en negro (el cuadrado se acorta sobre el fondo negro) */
   .sq-fill{position:absolute;left:0;right:0;bottom:0;height:100%;background:#fff;}   /* cuadrados en BLANCO */
   .sq.shr .sq-fill{background:var(--rojo);}   /* el cuadrado que se esta acortando va en ROJO */
   .sq.dead{border-color:transparent;}
@@ -370,7 +370,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v14</div>
+    <div class="app-ver">v15</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -533,7 +533,7 @@ var S={mode:'normal',stim:'a',total:'25',totalN:25,queue:[],cur:-1,curs:[],name:
    DECISIONES MIAS no confirmadas: (1) pulsar un cuadrado activo que NO se esta acortando termina el ejercicio (si no se podria pulsar todo
    sin parar); pulsar un hueco vacio no hace nada; (2) [v10, pedido de Roberto] si ya no queda NINGUNO acortandose (se te escapa el ultimo) el ejercicio
    termina; (3) suelo de SQ_MIN_MS (no indicado); (4) los nuevos nunca incluyen el que acabas de pulsar. */
-var SQ_N=25;            /* rejilla 5x5 */
+var SQ_N=25, SQ_COLS=5; /* rejilla 5x5 (v15: en modo NORMAL es 4x4 = 16 cuadrados; ver sqBuildGrid) */
 var SQ_FIRST=5;         /* cuadrados que se acortan al empezar */
 var SQ_KEEP=5;          /* el ejercicio termina cuando solo quedan 5 activos */
 var SQ_START_MS=1500;   /* tiempo que tarda un cuadrado en desaparecer al empezar (v8: 1500 ms; antes 1250, 1000 y 750) */
@@ -564,6 +564,8 @@ function sqNewCount(){   /* cuantos empiezan a acortarse tras ESTA pulsacion (S.
 }
 function sqBuildGrid(){
   var html='', k;
+  SQ_COLS=(S.mode==='normal')?4:5; SQ_N=SQ_COLS*SQ_COLS;   /* v15: Normal 4x4 (16); Extremo y Limite siguen en 5x5 (25) */
+  $('grid').style.gridTemplateColumns='repeat('+SQ_COLS+',1fr)'; $('grid').style.gridTemplateRows='repeat('+SQ_COLS+',1fr)';
   for(k=0;k<SQ_N;k++){ html+='<div class="sq" data-i="'+k+'"><div class="sq-fill"></div></div>'; }
   $('grid').innerHTML=html;
   S.sq=[].slice.call($('grid').querySelectorAll('.sq'));
