@@ -366,7 +366,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v9</div>
+    <div class="app-ver">v10</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -527,8 +527,8 @@ var S={mode:'normal',stim:'a',total:'a',name:'RDS',sport:'',times:[],t0:0,runnin
    (no se renueva, su hueco queda vacio). El ejercicio termina cuando solo quedan SQ_KEEP activos; el resultado es el numero de cuadrados
    pulsados y, de desempate, la reaccion media (cada reaccion = desde que ese cuadrado empezo a acortarse hasta que se pulso).
    DECISIONES MIAS no confirmadas: (1) pulsar un cuadrado activo que NO se esta acortando termina el ejercicio (si no se podria pulsar todo
-   sin parar); pulsar un hueco vacio no hace nada; (2) si ya no queda ninguno acortandose (nadie pulsa), empieza uno solo para que no se
-   quede parado; (3) suelo de SQ_MIN_MS (no indicado); (4) los nuevos nunca incluyen el que acabas de pulsar. */
+   sin parar); pulsar un hueco vacio no hace nada; (2) [v10, pedido de Roberto] si ya no queda NINGUNO acortandose (se te escapa el ultimo) el ejercicio
+   termina; (3) suelo de SQ_MIN_MS (no indicado); (4) los nuevos nunca incluyen el que acabas de pulsar. */
 var SQ_N=25;            /* rejilla 5x5 */
 var SQ_FIRST=5;         /* cuadrados que se acortan al empezar */
 var SQ_KEEP=5;          /* el ejercicio termina cuando solo quedan 5 activos */
@@ -613,7 +613,7 @@ function sqLoop(){
     var act=sqActive();
     setProgress((SQ_N-act)/(SQ_N-SQ_KEEP));
     if(act<=SQ_KEEP){ finish('fin'); return; }
-    if(sqShrinking()===0){ sqStart(1, -1); }   /* nadie pulsa: que no se quede parado */
+    if(sqShrinking()===0){ finish('last'); return; }   /* v10: se escapo el unico que se acortaba: ejercicio terminado (perdido) */
   }
   S.raf=requestAnimationFrame(sqLoop);
 }
@@ -708,7 +708,7 @@ function finish(reason){
   S.running=false; S.lock=true; cancelAnimationFrame(S.raf);
   if(S.coverTo){ clearTimeout(S.coverTo); S.coverTo=0; }
   var total=performance.now()-S.t0, c=calc();
-  $('resMsg').textContent = (reason==='wrong') ? 'Has pulsado un cuadrado que no se estaba acortando' : 'Fin del ejercicio: solo quedan '+SQ_KEEP+' cuadrados';
+  $('resMsg').textContent = (reason==='wrong') ? 'Has pulsado un cuadrado que no se estaba acortando' : (reason==='last' ? 'Se te ha escapado el último cuadrado que se estaba acortando' : 'Fin del ejercicio: solo quedan '+SQ_KEEP+' cuadrados');
   $('resMsg').style.display='block'; $('resEns').style.display='none';
   $('rAvg').textContent=String(S.pressed);
   $('rTime').textContent=fmtTime(total);
