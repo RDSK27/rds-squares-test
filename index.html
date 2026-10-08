@@ -182,14 +182,14 @@ if('serviceWorker' in navigator){
   .progress{flex:1;height:9px;background:var(--seg);border:2px solid var(--borde);}
   .progress > i{display:block;height:100%;background:var(--rojo);width:0%;transition:width .12s linear;}
 
-  .grid-wrap{position:relative;flex:1;min-height:0;display:flex;}
+  .grid-wrap{position:relative;flex:1;min-height:0;display:flex;background:#000;padding:6px;box-sizing:border-box;}   /* v5: fondo NEGRO */
   .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:6px;touch-action:none;}
-  .sq{position:relative;border:2px solid var(--negro);background:#fff;overflow:hidden;box-sizing:border-box;}
-  .sq-fill{position:absolute;left:0;right:0;bottom:0;height:100%;background:var(--negro);}
+  .sq{position:relative;border:2px solid #000;background:#000;overflow:hidden;box-sizing:border-box;}   /* borde y parte vacia en negro (el cuadrado se acorta sobre el fondo negro) */
+  .sq-fill{position:absolute;left:0;right:0;bottom:0;height:100%;background:#fff;}   /* cuadrados en BLANCO */
   .sq.shr .sq-fill{background:var(--rojo);}   /* el cuadrado que se esta acortando va en ROJO */
   .sq.dead{border-color:transparent;}
   .sq.dead .sq-fill{display:none;}
-  .sq-count{position:absolute;left:0;right:0;top:50%;margin-top:-70px;text-align:center;color:#fff;font-weight:900;font-size:130px;line-height:1;-webkit-text-stroke:3px var(--negro);paint-order:stroke fill;pointer-events:none;z-index:5;}
+  .sq-count{position:absolute;left:0;right:0;top:50%;margin-top:-70px;text-align:center;color:var(--rojo);font-weight:900;font-size:130px;line-height:1;-webkit-text-stroke:4px #fff;paint-order:stroke fill;pointer-events:none;z-index:5;}   /* rojo con borde blanco: se ve sobre blanco y sobre negro */
   .segment button[data-soon],.rank-tab[data-soon]{opacity:.38;cursor:default;}
   .cell.empty{background:#fff;}
   .grid.covered .cell svg{visibility:hidden;}
@@ -366,7 +366,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v4</div>
+    <div class="app-ver">v5</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
