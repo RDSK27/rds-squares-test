@@ -366,7 +366,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v5</div>
+    <div class="app-ver">v6</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -522,8 +522,8 @@ var S={mode:'normal',stim:'a',total:'a',name:'RDS',sport:'',times:[],t0:0,runnin
 
 /* ---------- Modo NORMAL (2026-10-08) ----------
    Rejilla de 5x5. Al empezar, 5 cuadrados (al azar) empiezan a ACORTARSE en altura y tardan SQ_START_MS en desaparecer. Se pulsan antes de que
-   desaparezcan: el pulsado se RENUEVA (vuelve a su altura) y empiezan a acortarse otros (1 por pulsacion; 2 a partir de SQ_TWO_FROM pulsados;
-   3 a partir de SQ_THREE_FROM). Cada SQ_STEP_EVERY pulsados el tiempo baja SQ_STEP_MS. Un cuadrado que llega abajo sin pulsar queda ANULADO
+   desaparezcan: el pulsado se RENUEVA (vuelve a su altura) y empiezan a acortarse otros (1 por pulsacion, salvo en los HITOS: cada SQ_MILESTONE_EVERY (10) pulsados desde SQ_TWO_FROM (20),
+   en esa pulsacion empiezan 2 -- y 3 desde SQ_THREE_FROM (50); la siguiente vuelve a ser 1). Cada SQ_STEP_EVERY pulsados el tiempo baja SQ_STEP_MS. Un cuadrado que llega abajo sin pulsar queda ANULADO
    (no se renueva, su hueco queda vacio). El ejercicio termina cuando solo quedan SQ_KEEP activos; el resultado es el numero de cuadrados
    pulsados y, de desempate, la reaccion media (cada reaccion = desde que ese cuadrado empezo a acortarse hasta que se pulso).
    DECISIONES MIAS no confirmadas: (1) pulsar un cuadrado activo que NO se esta acortando termina el ejercicio (si no se podria pulsar todo
@@ -536,8 +536,9 @@ var SQ_START_MS=1000;   /* tiempo que tarda un cuadrado en desaparecer al empeza
 var SQ_STEP_MS=25;      /* baja 25 ms ... (v4: antes 50) */
 var SQ_STEP_EVERY=5;    /* ... cada 5 cuadrados pulsados */
 var SQ_MIN_MS=150;      /* suelo del tiempo (provisional, no indicado) */
-var SQ_TWO_FROM=20;     /* a partir de 20 pulsados, cada pulsacion hace bajar dos */
-var SQ_THREE_FROM=50;   /* a partir de 50, tres */
+var SQ_TWO_FROM=20;     /* v6: SOLO al llegar a 20 pulsados empiezan a bajar dos; en la siguiente pulsacion vuelve a ser uno */
+var SQ_MILESTONE_EVERY=10;   /* ... y lo mismo en 30, 40, ... (cada 10 desde SQ_TWO_FROM) */
+var SQ_THREE_FROM=50;   /* en los hitos desde el 50 (50, 60, ...) empiezan tres en vez de dos (SUPUESTO mio: no se ha vuelto a indicar el 50) */
 
 function filterInitials(el){ el.value=el.value.replace(/[^A-Za-z]/g,'').toUpperCase(); }
 function startGame(){ try{ warmRank(selVal('segModo')||'normal', selVal('segEstimulo')||'a', selVal('segEnsayos')||'a'); }catch(e){}
@@ -552,7 +553,11 @@ function startGame(){ try{ warmRank(selVal('segModo')||'normal', selVal('segEsti
 function repeatGame(){ runGame(); }
 
 function sqDur(){ return Math.max(SQ_MIN_MS, SQ_START_MS - SQ_STEP_MS*Math.floor(S.pressed/SQ_STEP_EVERY)); }
-function sqNewCount(){ return S.pressed>=SQ_THREE_FROM ? 3 : (S.pressed>=SQ_TWO_FROM ? 2 : 1); }
+function sqNewCount(){   /* cuantos empiezan a acortarse tras ESTA pulsacion (S.pressed ya incluye la actual) */
+  var p=S.pressed;
+  if(p>=SQ_TWO_FROM && p%SQ_MILESTONE_EVERY===0){ return p>=SQ_THREE_FROM ? 3 : 2; }
+  return 1;
+}
 function sqBuildGrid(){
   var html='', k;
   for(k=0;k<SQ_N;k++){ html+='<div class="sq" data-i="'+k+'"><div class="sq-fill"></div></div>'; }
