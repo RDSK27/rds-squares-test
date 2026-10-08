@@ -370,7 +370,7 @@ if('serviceWorker' in navigator){
       </select>
     </div>
   </div>
-    <div class="app-ver">v16</div>
+    <div class="app-ver">v17</div>
     <div id="pending-sync" class="pending-sync"></div>
     </div>
 
@@ -534,7 +534,7 @@ var S={mode:'normal',stim:'a',total:'x1',totalN:16,queue:[],cur:-1,curs:[],name:
    sin parar); pulsar un hueco vacio no hace nada; (2) [v10, pedido de Roberto] si ya no queda NINGUNO acortandose (se te escapa el ultimo) el ejercicio
    termina; (3) suelo de SQ_MIN_MS (no indicado); (4) los nuevos nunca incluyen el que acabas de pulsar. */
 var SQ_N=16, SQ_COLS=4; /* v16: rejilla 4x4 = 16 cuadrados en TODOS los modos (v15 solo Normal) */
-var SQ_FIRST=5;         /* cuadrados que se acortan al empezar */
+var SQ_FIRST=4;         /* cuadrados que se acortan al empezar (v17: 4, antes 5) */
 var SQ_KEEP=5;          /* el ejercicio termina cuando solo quedan 5 activos */
 var SQ_START_MS=1500;   /* tiempo que tarda un cuadrado en desaparecer al empezar (v8: 1500 ms; antes 1250, 1000 y 750) */
 var SQ_STEP_MS=25;      /* baja 25 ms ... (v4: antes 50) */
