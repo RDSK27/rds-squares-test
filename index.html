@@ -182,8 +182,8 @@ if('serviceWorker' in navigator){
   .progress{flex:1;height:9px;background:var(--seg);border:2px solid var(--borde);}
   .progress > i{display:block;height:100%;background:var(--rojo);width:0%;transition:width .12s linear;}
 
-  .grid-wrap{position:relative;flex:1;min-height:0;display:flex;background:#000;padding:6px;box-sizing:border-box;}   /* v5: fondo NEGRO */
-  .grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:6px;touch-action:none;}
+  .grid-wrap{position:relative;flex:1;min-height:0;display:flex;background:#000;padding:6px;box-sizing:border-box;container-type:size;}   /* v5: fondo NEGRO */
+  .grid{flex:none;margin:auto;width:min(100cqw,100cqh);height:min(100cqw,100cqh);display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(5,1fr);gap:6px;touch-action:none;}   /* v13: rejilla CUADRADA (lado = el menor entre ancho y alto disponibles) -> cuadrados, no rectangulos */
   .sq{position:relative;border:2px solid #000;background:#000;overflow:hidden;box-sizing:border-box;}   /* borde y parte vacia en negro (el cuadrado se acorta sobre el fondo negro) */
   .sq-fill{position:absolute;left:0;right:0;bottom:0;height:100%;background:#fff;}   /* cuadrados en BLANCO */
   .sq.shr .sq-fill{background:var(--rojo);}   /* el cuadrado que se esta acortando va en ROJO */
