@@ -368,7 +368,7 @@ if('serviceWorker' in navigator){
           <button class="start-btn rank-btn" ontouchend="event.stopPropagation();" onclick="showRanking()" aria-label="Ranking"><svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#333333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 13.5v7.5M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 4H4v2a3 3 0 0 0 3 3M17 4h3v2a3 3 0 0 1-3 3"/></svg></button>
         </div>
       </div>
-  <div class="app-ver" style="margin-top:6px;padding-top:0;">v35</div>
+  <div class="app-ver" style="margin-top:6px;padding-top:0;">v36</div>
   <div id="user-name-bar" style="margin-top:8px;">
     <div style="display:flex;width:200px;gap:0;margin:0 auto;">
       <input id="user-ini-input" type="text" maxlength="3" placeholder="INI"
@@ -1254,6 +1254,70 @@ function x2OptsDraw(){
     +'<div class="x2o-g"><div class="x2o-k">Set decisivo ('+(X2O.best===5?'5.&ordm;':'3.&ordm;')+')</div>'+row('dec',[['set','Otro set'],['oro','Punto<br>de oro'],['dif','Diferencia<br>de 2']])+'</div>';
   h+='<div class="x2o-bs"><button type="button" class="x2o-b sec" data-v="back">Volver</button><button type="button" class="x2o-b" data-v="go">Jugar</button></div>';
   document.getElementById('x2o').innerHTML=h;
+}
+/* ---------- x2 · PANTALLA DE ENTRADA COMUN (v 2026-11-27, maqueta aprobada por Roberto) ----------
+   Bloque comun para TODAS las apps con x2 (y la plantilla). Sustituye al x2OptsDraw antiguo: esta definicion va DESPUES de la antigua
+   y es la que vale. Cabecera negra (Volver + nombre de la app), emblema redondo (movil partido J1/J2), "MODO X2 · Dos jugadores · un
+   movil", tarjeta Partido (al mejor de 3 / 5) y, si la app usa puntos (X2_PTS), tarjetas "Empate a 9" y "Set decisivo"; boton redondo
+   JUGAR. El click lo sigue gestionando x2OptsOpen (data-k = opcion, data-v = valor; data-v="back"/"go").
+   Gancho opcional por app: function x2EntryHint(){ return 'texto'; } -> linea de explicacion bajo las opciones. */
+function x2nCss(){
+  if(document.getElementById('x2n-css')) return;
+  var st=document.createElement('style'); st.id='x2n-css';
+  st.textContent=''
+   +'#x2o.x2n{padding:0;gap:0;justify-content:flex-start;align-items:stretch;background:linear-gradient(160deg,#f4f5f6 0%,#dfe1e4 45%,#c2c5c9 100%);font-family:Arial,Helvetica,sans-serif;}'
+   +'.x2n-hdr{flex:none;height:52px;background:#000;border-bottom:4px solid #b03020;display:flex;align-items:center;justify-content:space-between;padding:0 12px;box-sizing:border-box;}'
+   +'.x2n-hdr span{font:900 11px Arial,sans-serif;letter-spacing:.14em;color:#888;text-transform:uppercase;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:60%;}'
+   +'.x2n-bk{background:none;border:0;color:#ccc;font:900 12px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;padding:10px 4px;cursor:pointer;}'
+   +'.x2n-pb{flex:1;min-height:0;width:100%;max-width:420px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:12px;padding:16px 16px 20px;box-sizing:border-box;overflow:auto;}'
+   +'.x2n-emb{flex:none;width:104px;height:104px;border-radius:50%;padding:5px;box-sizing:border-box;background:conic-gradient(#fff,#9a9a9a,#e8e8e8,#5a5a5a,#fff,#8a8a8a,#dcdcdc,#666,#fff);box-shadow:0 6px 14px rgba(0,0,0,.45);}'
+   +'.x2n-emb>div{width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#4a4a4a 0%,#1a1a1a 55%,#000 100%);display:flex;align-items:center;justify-content:center;}'
+   +'.x2n.pts .x2n-emb{width:78px;height:78px;padding:4px;}.x2n.pts .x2n-emb svg{width:52px;height:52px;}'
+   +'.x2n-ttl{font:900 30px Arial,sans-serif;letter-spacing:.1em;color:#111;text-transform:uppercase;line-height:1;text-align:center;}'
+   +'.x2n-ttl small{display:block;font:800 12px Arial,sans-serif;letter-spacing:.14em;color:#b03020;margin-top:7px;}'
+   +'.x2n-card{width:100%;background:#000;border:3px solid #b03020;border-radius:12px;padding:12px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;}'
+   +'.x2n-lbl{font:900 11px Arial,sans-serif;letter-spacing:.16em;color:#bdbdbd;text-transform:uppercase;}'
+   +'.x2n-tiles{display:flex;gap:8px;}'
+   +'.x2n-tiles button{flex:1;border-radius:8px;background:#1b1b1b;border:2px solid #333;padding:9px 4px;text-align:center;color:#fff;cursor:pointer;font-family:Arial,sans-serif;}'
+   +'.x2n-tiles button.on{background:#b03020;border-color:#e0533a;}'
+   +'.x2n-tiles .x2n-k{display:block;font:900 12px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;}'
+   +'.x2n-tiles b{display:block;font:900 38px Arial,sans-serif;line-height:1;margin:2px 0;}'
+   +'.x2n-tiles span{display:block;font:800 10px Arial,sans-serif;letter-spacing:.06em;text-transform:uppercase;opacity:.85;margin-top:3px;line-height:1.25;}'
+   +'.x2n-tiles.sm button{padding:10px 3px;}.x2n-tiles.sm span{font-size:11px;opacity:1;margin:0;}'
+   +'.x2n-dots{display:flex;gap:5px;justify-content:center;margin-top:7px;}.x2n-dots i{width:10px;height:10px;border-radius:50%;background:#fff;display:block;}'
+   +'.x2n-hint{font:700 12px Arial,sans-serif;color:#bbb;text-align:center;line-height:1.35;}'
+   +'.x2n-rbrow{display:flex;justify-content:center;margin-top:auto;padding-top:6px;}'
+   +'.x2n-rb{width:84px;height:84px;border-radius:50%;padding:4px;box-sizing:border-box;background:conic-gradient(#fff,#9a9a9a,#e8e8e8,#5a5a5a,#fff,#8a8a8a,#dcdcdc,#666,#fff);box-shadow:0 5px 12px rgba(0,0,0,.55);}'
+   +'.x2n-rb:active{transform:translateY(3px);}'
+   +'.x2n-rb button{width:100%;height:100%;border-radius:50%;border:0;cursor:pointer;color:#fff;font:900 12px -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;background:radial-gradient(circle at 35% 30%,#e84030 0%,#b03020 45%,#7a1a10 100%);box-shadow:inset 0 2px 4px rgba(255,255,255,.28),inset 0 -3px 6px rgba(0,0,0,.5);}'
+   +'.x2n-note{font:600 12px Arial,sans-serif;color:#444;text-align:center;line-height:1.35;}';
+  document.head.appendChild(st);
+}
+function x2nAppName(){   /* nombre de la app para la cabecera: el titulo de inicio (con <br> = espacio) o el nombre de la app instalada */
+  var h=document.querySelector('h1.title')||document.querySelector('h1'), t='';
+  if(h){ var d=document.createElement('div'); d.innerHTML=h.innerHTML.replace(/<br\s*\/?>/gi,' '); t=(d.textContent||'').replace(/\s+/g,' ').trim(); }
+  if(!t){ var m=document.querySelector('meta[name="apple-mobile-web-app-title"]'); t=(document.title||(m&&m.content)||'').replace(/^RDS\s*-?\s*/,'').trim(); }
+  return t;
+}
+function x2OptsDraw(){
+  x2nCss();
+  var el=document.getElementById('x2o'), pts=(typeof X2_PTS!=='undefined' && X2_PTS);
+  el.className='x2n'+(pts?' pts':'');
+  function best(v,sets){ var dots='', i; for(i=0;i<sets;i++) dots+='<i></i>'; return '<button type="button" data-k="best" data-v="'+v+'" class="'+(X2O.best===v?'on':'')+'"><span class="x2n-k">Al mejor de</span><b>'+v+'</b><span>Gana quien llega a '+sets+' sets</span><em class="x2n-dots">'+dots+'</em></button>'; }
+  function opt(k,v,txt){ return '<button type="button" data-k="'+k+'" data-v="'+v+'" class="'+(String(X2O[k])===String(v)?'on':'')+'"><span>'+txt+'</span></button>'; }
+  var app=x2nAppName();
+  var hint=(typeof x2EntryHint==='function')?x2EntryHint():'';
+  var h='<div class="x2n-hdr"><button type="button" class="x2n-bk" data-v="back">&#8592; Volver</button><span>'+app+'</span></div>'
+    +'<div class="x2n-pb">'
+    +'<div class="x2n-emb"><div><svg width="70" height="70" viewBox="0 0 74 74" fill="none" aria-hidden="true"><rect x="17" y="4" width="40" height="66" rx="7" stroke="#fff" stroke-width="3"/><line x1="17" y1="37" x2="57" y2="37" stroke="#b03020" stroke-width="3"/><text x="37" y="30" fill="#fff" font-family="Arial" font-weight="900" font-size="15" text-anchor="middle" transform="rotate(180 37 24)">J2</text><text x="37" y="57" fill="#fff" font-family="Arial" font-weight="900" font-size="15" text-anchor="middle">J1</text></svg></div></div>'
+    +'<div class="x2n-ttl">Modo x2<small>Dos jugadores &middot; un m&oacute;vil</small></div>'
+    +'<div class="x2n-card"><div class="x2n-lbl">Partido</div><div class="x2n-tiles">'+best(3,2)+best(5,3)+'</div>'+(hint&&!pts?'<div class="x2n-hint">'+hint+'</div>':'')+'</div>';
+  if(pts) h+='<div class="x2n-card"><div class="x2n-lbl">Empate a 9</div><div class="x2n-tiles sm">'+opt('tie','diez','Gana quien llega a 10')+opt('tie','dif','Diferencia de 2')+'</div>'
+    +'<div class="x2n-lbl">Set decisivo ('+(X2O.best===5?'5.&ordm;':'3.&ordm;')+')</div><div class="x2n-tiles sm">'+opt('dec','set','Otro set')+opt('dec','oro','Punto de oro')+opt('dec','dif','Diferencia de 2')+'</div>'
+    +(hint?'<div class="x2n-hint">'+hint+'</div>':'')+'</div>';
+  h+='<div class="x2n-rbrow"><div class="x2n-rb"><button type="button" data-v="go">Jugar</button></div></div>'
+    +'<div class="x2n-note">Poned el m&oacute;vil plano entre los dos.</div></div>';
+  el.innerHTML=h;
 }
 function isX2(){ return $('segModo').querySelector('[data-v="x2"]').classList.contains('x2on'); }
 function xToggle(b){
